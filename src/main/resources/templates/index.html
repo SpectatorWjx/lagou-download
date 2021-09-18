@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="jquery.min.js"></script>
+
+</head>
+<body>
+<div class="dowebok">
+    <div class="form-item">
+        <input id="courseId" type="text" autocomplete="off" placeholder="课程id">
+    </div>
+    <div class="form-item"><button id="submit">下载</button></div>
+    <div class="form-item">
+        <textarea id="cookie" autocomplete="off" placeholder="cookie"></textarea>
+    </div>
+</div> <script type="text/javascript">
+    $("#submit").click(function() {
+        var courseId = $('#courseId').val();
+        var cookie = $('#cookie').val();
+
+        console.log("download:" + courseId);
+        var DownLoadFile = function (options) {
+            var config = $.extend(true, { method: 'post' }, options);
+            var $iframe = $('<iframe id="down-file-iframe" />');
+            var $form = $('<form target="down-file-iframe" method="' + config.method + '" />');
+            $form.attr('action', config.url);
+            for (var key in config.data) {
+                $form.append('<input type="hidden" name="' + key + '" value="' + config.data[key] + '" />');
+            }
+            $iframe.append($form);
+            $(document.body).append($iframe);
+            $form[0].submit();
+            $iframe.remove();
+        }
+        DownLoadFile({
+            url:'download/course',
+            data:{courseId:courseId, cookie:cookie}
+        });
+    });
+</script>
+</body>
+</html>
