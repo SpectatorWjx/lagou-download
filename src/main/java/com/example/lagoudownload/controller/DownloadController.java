@@ -46,38 +46,11 @@ public class DownloadController {
 
     @PostMapping("course")
     public Map<String, Object> downloadCourse(@RequestParam String courseId, String cookie , HttpServletResponse response) throws InterruptedException, IOException {
-       Map<String, Object> map = new HashMap<>();
-
+        Map<String, Object> map = new HashMap<>();
         File zipFile = new File(savePath + File.separator + courseId+".zip");
-        if(!zipFile.exists()){
-            if(StringUtils.isEmpty(cookie)){
-                map.put("code", 200);
-                map.put("message","课程不存在，请填写cookie重新下载");
-                return map;
-            }
-            //下载到服务器
-            try {
-                int status = CmdExecutor.executeCmd(new File("."), "ffmpeg", "-version");
-                log.debug("检查ffmpeg是否存在,{}", status);
-            } catch (Exception e) {
-                log.error("{}", e.getMessage());
-            }
-            log.info("开始下载课程 专栏ID列表：{}", courseId);
-            Downloader downloader = new Downloader(courseId, savePath,
-                    DownloadType.loadByCode(Integer.valueOf(downloadType)), cookie);
-            try {
-                downloader.start();
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-            log.info("\n====>程序运行完成");
-            ExecutorService.tryTerminal();
-            //打包
-            String newSavePath = savePath + File.separator + getFile(savePath, courseId+"_");
-            FileOutputStream fos1 = new FileOutputStream(zipFile);
-            ZipUtils.toZip(newSavePath, fos1, true);
+        if(!zipFile.exists()) {
+            downloadToLocal(courseId, cookie);
         }
-
         // 配置文件下载
         response.setHeader("content-type", "application/octet-stream");
         response.setContentType("application/octet-stream");
@@ -124,39 +97,43 @@ public class DownloadController {
     @ResponseBody
     public Map<String, Object> downloadCourse(@RequestParam String courseId, @RequestParam String cookie) throws InterruptedException, IOException {
         Map<String, Object> map = new HashMap<>();
-
         File zipFile = new File(savePath + File.separator + courseId+".zip");
-        if(!zipFile.exists()){
-            if(StringUtils.isEmpty(cookie)){
-                map.put("code", 200);
-                map.put("message","课程不存在，请填写cookie重新下载");
-                return map;
-            }
-            //下载到服务器
-            try {
-                int status = CmdExecutor.executeCmd(new File("."), "ffmpeg", "-version");
-                log.debug("检查ffmpeg是否存在,{}", status);
-            } catch (Exception e) {
-                log.error("{}", e.getMessage());
-            }
-            log.info("开始下载课程 专栏ID列表：{}", courseId);
-            Downloader downloader = new Downloader(courseId, savePath,
-                    DownloadType.loadByCode(Integer.valueOf(downloadType)), cookie);
-            try {
-                downloader.start();
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-            log.info("\n====>程序运行完成");
-            ExecutorService.tryTerminal();
-            //打包
-            String newSavePath = savePath + File.separator + getFile(savePath, courseId+"_");
-            FileOutputStream fos1 = new FileOutputStream(zipFile);
-            ZipUtils.toZip(newSavePath, fos1, true);
+        if(!zipFile.exists()) {
+            downloadToLocal(courseId, cookie);
         }
         map.put("code", 200);
         map.put("message","success");
         return map;
+    }
+
+    private void downloadToLocal(String courseId, String cookie) throws InterruptedException, FileNotFoundException {
+
+        File zipFile = new File(savePath + File.separator + courseId+".zip");
+        if(StringUtils.isEmpty(cookie)){
+            throw new RuntimeException("课程不存在，请填写cookie重新下载");
+        }
+        //下载到服务器
+        try {
+            int status = CmdExecutor.executeCmd(new File("."), "ffmpeg", "-version");
+            log.debug("检查ffmpeg是否存在,{}", status);
+        } catch (Exception e) {
+            log.error("{}", e.getMessage());
+        }
+        log.info("开始下载课程 专栏ID列表：{}", courseId);
+        Downloader downloader = new Downloader(courseId, savePath,
+                DownloadType.loadByCode(Integer.valueOf(downloadType)), cookie);
+        try {
+            downloader.start();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+        log.info("\n====>程序运行完成");
+        ExecutorService.tryTerminal();
+        //打包
+        String newSavePath = savePath + File.separator + getFile(savePath, courseId+"_");
+        FileOutputStream fos1 = new FileOutputStream(zipFile);
+        ZipUtils.toZip(newSavePath, fos1, true);
+
     }
 
 //    @ResponseBody
